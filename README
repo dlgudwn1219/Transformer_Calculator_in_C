@@ -1,6 +1,10 @@
+We implement a Calculator with the Transformer Architecture.
+We use C, starting from scratch.
+Hooray for C and boo for Python!!!
+
 Plan
 
-Making a full Transformer Calculator for 4 days.
+Making a full 'C' Transformer Calculator for 4 days.
 
 Phase 1: Tensor structure & Basic Calc
 	(1) Tensor structure that can save value & gradient
