@@ -1,0 +1,10 @@
+Plan
+
+Making a full Transformer Calculator for 4 days.
+
+Phase 1: Tensor structure & Basic Calc
+	(1) Tensor structure that can save value & gradient
+	(2) Basic Calc:
+		MatMul & Add
+
+Phase 2: Activation function & Normaliztion
