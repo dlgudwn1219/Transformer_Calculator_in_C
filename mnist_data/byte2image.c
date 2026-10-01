@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 // Big Endian to Little Endian
 uint32_t swap_endian(uint32_t val){
@@ -9,7 +10,8 @@ uint32_t swap_endian(uint32_t val){
             ((val >> 24) & 0x000000ff);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
     // 1. Read file in binary mode
     FILE *file = fopen("train-images-idx3-ubyte", "rb");
     if (file == NULL) {
@@ -36,8 +38,16 @@ int main() {
     printf("# images: %d\n", num_images);
     printf("rows: %d, cols: %d\n", num_cols, num_rows);
 
+    // 5. Get argument
+    int image_idx;
+    if (argc < 2) image_idx = 0;
+    else image_idx = atoi(argv[1]);
+
+    printf("Reading image #%d\n", image_idx);
+
     // 5. Print Image to terminal
     unsigned char image[28][28];
+    fseek(file, 28 * 28 * image_idx, SEEK_CUR);
     fread(image, sizeof(unsigned char), 28 * 28, file);
     
     for (int i = 0; i < 28; i++){
