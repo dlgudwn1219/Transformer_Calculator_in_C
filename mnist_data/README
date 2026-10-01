@@ -1,0 +1,3 @@
+Directory for MNIST dataset
+
+$ ./download.sh
