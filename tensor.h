@@ -28,5 +28,16 @@ void matmul_backward(Tensor* A, Tensor* B, Tensor* C);
 void add_forward(Tensor* A, Tensor* B, Tensor* C);
 void add_backward(Tensor* A, Tensor* B, Tensor* C);
 
+void scale_tensor(Tensor* A, float scale);
+void transpose(Tensor* in, Tensor* out);
+
+void relu_forward(Tensor* X, Tensor* Y);
+void relu_backward(float* x, float* dout, float* dx, int size);
+
+void sgd_update(Tensor* t);
+
+float softmax_crossentropy_forward(float* logits, int target_class, float* probs, int num_classes);
+
+void softmax_crossentropy_backward(float* probs, int target_class, float* dlogits, int num_classes);
 
 #endif // TENSOR_H

@@ -6,14 +6,16 @@
 
 
 
-// 1. Matrix Multiplication (Forward propagation): C = A @ B
+// 1. Matrix Multiplication (Forward, Backward): C = A @ B
+
+// Forward
 void matmul_forward(Tensor* A, Tensor* B, Tensor*C){
 	memset(C->value, 0, C->size * sizeof(float));
 
     int I = A->shape[A->ndim - 2];
     int J = A->shape[A->ndim - 1];
     int K = B->shape[B->ndim - 1];
-    
+
     // All batch size except the last two dimensions
     int batch_size = get_batch_size(A);
 
@@ -34,12 +36,10 @@ void matmul_forward(Tensor* A, Tensor* B, Tensor*C){
     }
 }
 
-// 2. Matrix Backprop
+// Backward
 // dL/dA = dL/dC @ B^T
 // dL/dB = A^T @ dL/dC
-
-void matmul_backward(Tensor* A, Tensor* B, Tensor*C){
-    
+void matmul_backward(Tensor* A, Tensor* B, Tensor*C){    
     int I = A->shape[A->ndim - 2];
     int J = A->shape[A->ndim - 1];
     int K = B->shape[B->ndim - 1];
@@ -83,42 +83,20 @@ void matmul_backward(Tensor* A, Tensor* B, Tensor*C){
     }
 }
 
+// 2. Matrix addition (Forward, Backward): C = A + B
+
+// Forward
 void add_forward(Tensor* A, Tensor*B, Tensor*C){
     for (int i = 0; i < C->size; i++){
         C->value[i] = A->value[i] + B->value[i];
     }
 }
 
+// Backward
 void add_backward(Tensor* A, Tensor* B, Tensor* C){
     for (int i = 0; i < C->size; i++){
         A->grad[i] += C->grad[i];
         B->grad[i] += C->grad[i];
-    }
-}
-
-void apply_softmax(Tensor* t){
-    int last_dim = t->shape[t->ndim - 1];
-    int num_rows = t->size / last_dim;
-
-    float max_val = -FLT_MAX;
-    for (int i = 0; i < num_rows; i++){
-        float* row = t->value + i * last_dim; // t->value is also a pointer
-
-        // 1. Max trick: avoid exp overflow
-        float max_val = -FLT_MAX;
-        for (int j = 0; j < last_dim; j++)
-            if (row[j] > max_val)
-                max_val = row[j];
-
-        float sum = 0.0f;
-        for (int j = 0; j < last_dim; j++){
-            row[j] = expf(row[j] - max_val);
-            sum += row[j];
-        }
-        
-        for (int j = 0; j < last_dim; j++) {
-            row[j] /= sum;
-        }
     }
 }
 
@@ -151,3 +129,105 @@ void apply_layernorm(Tensor* t, float* gamma, float* beta, float eps){
         }
     }
 }
+
+void scale_tensor(Tensor* t, float scale){
+    for (int i = 0; i < t->size; i++){
+        t->value[i] *= scale;
+    }
+}
+
+void transpose(Tensor* in, Tensor* out){
+    int batch_size = get_batch_size(in);
+    int I = in->shape[in->ndim -2];
+    int J = in->shape[in->ndim -1];
+
+    for (int b = 0; b < batch_size; b++){
+        for (int i = 0; i < I; i++){
+            for (int j = 0; j < J; j++){
+                int in_index = b * I*J + i * J + j;
+                int out_index = b* I*J + j * I + i;
+                out->values[out_index] = in->values[in_index];
+            }
+        }
+    }
+}
+
+
+// RelU backward & forward
+void relu_forward(Tensor* X, Tensor* Y) {
+    for (int i = 0; i < X->size; i++) {
+        Y->values[i] = X->values[i] > 0.0f ? X->values[i] : 0.0f;
+    }
+}
+
+void relu_backward(float* x, float* dout, float* dx, int size) {
+    for (int i = 0; i < size; i++){
+        dx[i] = x[i] > 0.0f ? dout[i] : 0.0f;
+    }
+}
+
+void sgd_update(Tensor* t, float lr){
+    for (int i = 0; i < t->size; i++){
+        t->values[i] -= lr * t->grads[i];
+    }
+}
+
+// Softmax + Cross Entropy 
+
+void apply_softmax(Tensor* t){
+    int last_dim = t->shape[t->ndim - 1];
+    int num_rows = t->size / last_dim;
+
+    float max_val = -FLT_MAX;
+    for (int i = 0; i < num_rows; i++){
+        float* row = t->value + i * last_dim; // t->value is also a pointer
+
+        // 1. Max trick: avoid exp overflow
+        float max_val = -FLT_MAX;
+        for (int j = 0; j < last_dim; j++)
+            if (row[j] > max_val)
+                max_val = row[j];
+
+        float sum = 0.0f;
+        for (int j = 0; j < last_dim; j++){
+            row[j] = expf(row[j] - max_val);
+            sum += row[j];
+        }
+        
+        for (int j = 0; j < last_dim; j++) {
+            row[j] /= sum;
+        }
+    }
+}
+
+float softmax_crossentropy_forward(float* logits, int target_class, float* probs, int num_classes){
+    // Max trick
+    float max_val = logits[0];
+    
+    for (int i = 1; i < num_classes; i++){
+        if (logits[i] > max_val)
+            max_val = logits[i];
+    }
+
+    //Softmax
+    float sum_exp = 0.0f;
+    for (int i = 0; i < num_classes; i++){
+        probs[i] = expf(logits[i] - max_val);
+        sum_exp == probs[i];
+    }
+
+    for (int i = 0; i < num_classes; i++){
+        probs[i] /= sum_exp;
+    }
+
+    return -logf(probs[target_class] + 1e-7);
+}
+
+void softmax_crossentropy_backward(float* probs, int target_class, float* dlogits, int num_classes) {
+    for (int i = 0; i < num_classes; i++){
+        dlogits[i] = probs[i];
+    }
+    dlogits[target_calss] -= 1.0f;
+}
+
+

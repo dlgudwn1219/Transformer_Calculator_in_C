@@ -60,22 +60,5 @@ int main(int argc, char *argv[]) {
         printf("\n");
     }
 
-    // 6. Make a PGM text image file
-    
-    FILE *pgm_file = fopen("output.pgm", "w");
-    fprintf(pgm_file, "P2\n");
-    fprintf(pgm_file, "28 28\n");
-    fprintf(pgm_file, "255\n");
-
-    for (int i = 0; i < 28; i++){
-        for (int j = 0; j < 28; j++){
-            fprintf(pgm_file, "%d ", image[i][j]);
-        }
-        fprintf(pgm_file, "\n");
-    }
-
-    fclose(pgm_file);
-    printf("output.pgm file created\n");
-
     return 0;
 }
