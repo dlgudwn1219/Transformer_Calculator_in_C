@@ -17,8 +17,8 @@ Tensor* create_tensor(int ndim, int* shape){
 
     t->size = size;
 
-	t->value = (float*)calloc(t->size, sizeof(float));
-	t->grad = (float*)calloc(t->size, sizeof(float));
+	t->values = (float*)calloc(t->size, sizeof(float));
+	t->grads = (float*)calloc(t->size, sizeof(float));
 
     t->rows = t->shape[t->ndim - 2];
     t->cols = t->shape[t->ndim - 1];
@@ -29,8 +29,8 @@ Tensor* create_tensor(int ndim, int* shape){
 void free_tensor(Tensor* t){
     if (t){
         free(t->shape);
-		free(t->value);
-		free(t->grad);
+		free(t->values);
+		free(t->grads);
 		free(t);
 	}
 }

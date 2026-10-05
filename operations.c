@@ -10,7 +10,7 @@
 
 // Forward
 void matmul_forward(Tensor* A, Tensor* B, Tensor*C){
-	memset(C->value, 0, C->size * sizeof(float));
+	memset(C->values, 0, C->size * sizeof(float));
 
     int I = A->shape[A->ndim - 2];
     int J = A->shape[A->ndim - 1];
@@ -27,10 +27,10 @@ void matmul_forward(Tensor* A, Tensor* B, Tensor*C){
     			for (int j = 0; j < J; j++){
 			    	int a_idx = b * I*J + i * A->cols + j;
 		    		int b_idx = b * J*K + j * B->cols + k;
-	    			sum += A->value[a_idx] * B->value[b_idx];
+	    			sum += A->values[a_idx] * B->values[b_idx];
     			}
 			    int c_idx = b* I*K + i * C->cols + k;
-		    	C->value[c_idx] = sum;
+		    	C->values[c_idx] = sum;
 	    	}
     	}
     }
@@ -56,10 +56,10 @@ void matmul_backward(Tensor* A, Tensor* B, Tensor*C){
                 for (int k = 0; k < K; k++){
                     int c_idx = b * I*K + i * K + k;
                     int b_idx = b * K*J + j * K + k; // B^T[k][j] = B[j][k]
-                    sum += C->value[c_idx] * B->value[b_idx];
+                    sum += C->values[c_idx] * B->values[b_idx];
                 }
                 int a_idx = i * A->cols + j;
-                A->grad[a_idx] += sum; // Grad should always be accumulated
+                A->grads[a_idx] += sum; // Grad should always be accumulated
             }
         }
     }
@@ -74,10 +74,10 @@ void matmul_backward(Tensor* A, Tensor* B, Tensor*C){
                 for (int i = 0; i < I; i++){
                     int a_idx = b * I*J + i * J + j; // A^T[j][i] = A[i][j]
                     int c_idx = b * I*K + i * K + k;
-                    sum += A->value[a_idx] * C->value[c_idx];
+                    sum += A->values[a_idx] * C->values[c_idx];
                 }
             int b_idx = b * J*K + j * K + k;
-                B->grad[b_idx] += sum;
+                B->grads[b_idx] += sum;
             }
         }
     }
@@ -88,15 +88,15 @@ void matmul_backward(Tensor* A, Tensor* B, Tensor*C){
 // Forward
 void add_forward(Tensor* A, Tensor*B, Tensor*C){
     for (int i = 0; i < C->size; i++){
-        C->value[i] = A->value[i] + B->value[i];
+        C->values[i] = A->values[i] + B->values[i];
     }
 }
 
 // Backward
 void add_backward(Tensor* A, Tensor* B, Tensor* C){
     for (int i = 0; i < C->size; i++){
-        A->grad[i] += C->grad[i];
-        B->grad[i] += C->grad[i];
+        A->grads[i] += C->grads[i];
+        B->grads[i] += C->grads[i];
     }
 }
 
@@ -105,7 +105,7 @@ void apply_layernorm(Tensor* t, float* gamma, float* beta, float eps){
     int num_rows = t->size / last_dim;
 
     for (int i = 0; i < num_rows; i++){
-        float* row = t->value + i * last_dim;
+        float* row = t->values + i * last_dim;
         
         // 1. Mean
         float sum = 0.0f;
@@ -132,7 +132,7 @@ void apply_layernorm(Tensor* t, float* gamma, float* beta, float eps){
 
 void scale_tensor(Tensor* t, float scale){
     for (int i = 0; i < t->size; i++){
-        t->value[i] *= scale;
+        t->values[i] *= scale;
     }
 }
 
@@ -180,7 +180,7 @@ void apply_softmax(Tensor* t){
 
     float max_val = -FLT_MAX;
     for (int i = 0; i < num_rows; i++){
-        float* row = t->value + i * last_dim; // t->value is also a pointer
+        float* row = t->values + i * last_dim; // t->value is also a pointer
 
         // 1. Max trick: avoid exp overflow
         float max_val = -FLT_MAX;
@@ -213,7 +213,7 @@ float softmax_crossentropy_forward(float* logits, int target_class, float* probs
     float sum_exp = 0.0f;
     for (int i = 0; i < num_classes; i++){
         probs[i] = expf(logits[i] - max_val);
-        sum_exp == probs[i];
+        sum_exp += probs[i];
     }
 
     for (int i = 0; i < num_classes; i++){
@@ -227,7 +227,7 @@ void softmax_crossentropy_backward(float* probs, int target_class, float* dlogit
     for (int i = 0; i < num_classes; i++){
         dlogits[i] = probs[i];
     }
-    dlogits[target_calss] -= 1.0f;
+    dlogits[target_class] -= 1.0f;
 }
 
 

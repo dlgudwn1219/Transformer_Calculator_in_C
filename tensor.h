@@ -7,11 +7,12 @@ typedef struct {
     int ndim;
     int* shape;
 	int size;
-	float* value;
-	float* grad;
+	float* values;
+	float* grads;
 
     int rows;
     int cols;
+    
 } Tensor;
 
 // 2. Basic functions (Create & Free)
@@ -34,7 +35,7 @@ void transpose(Tensor* in, Tensor* out);
 void relu_forward(Tensor* X, Tensor* Y);
 void relu_backward(float* x, float* dout, float* dx, int size);
 
-void sgd_update(Tensor* t);
+void sgd_update(Tensor* t, float lr);
 
 float softmax_crossentropy_forward(float* logits, int target_class, float* probs, int num_classes);
 

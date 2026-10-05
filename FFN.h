@@ -11,18 +11,19 @@ typedef struct {
     int* shape; // [768, 32,10]
     Tensor** weights;
     Tensor** biases;
+    Tensor** results;
 } FFN;
 
 // 2. Basic functions (Create, Save & Free)
 FFN* create_ffn(int depth, int* shape);
-void save_ffn(FFN* ffn, string save_path); 
+void save_ffn(FFN* ffn, char* save_path);
 void free_ffn(FFN* ffn);
 
 // 3. Utils
-int get_size(FFN* ffn);
+long get_size(FFN* ffn);
 
 // 4. Operation functions
-void ffn_forward(FFN* ffn);
+Tensor* ffn_forward(FFN* ffn, Tensor* X);
 void ffn_backward(FFN* ffn);
 
 #endif // NEURALNET_H
