@@ -5,6 +5,7 @@ Hooray for C and boo for Python!!!
 Plan
 
 Making a full 'C' Transformer Calculator for 4 days.
+Fixed: Coding a MNIST MLP first
 
 Phase 1: Tensor structure & Basic Calc
 	(1) Tensor structure that can save value & gradient
@@ -12,3 +13,6 @@ Phase 1: Tensor structure & Basic Calc
 		MatMul & Add
 
 Phase 2: Activation function & Normaliztion
+
+
+10/5: Did unit test for ffn.h and ffn.c. Only for forward. Have to understand equations better for backward.
