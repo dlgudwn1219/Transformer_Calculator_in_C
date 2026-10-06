@@ -68,15 +68,14 @@ int main(){
     int ffn_shape[3] = {10, 5, 3};
 
     Tensor* X = create_tensor(4, X_shape);
-    for (int i = 0; i < 10; i++) X->values[i] = i + 1;
+    for (int i = 0; i < 10; i++) X->values[i] = (float)(((i * 47) % 11)) / 12.0f;
     
     FFN* simple_net = create_ffn(2, ffn_shape);
     // Initialize weight matrix to 1
         for (int i = 0; i < simple_net->depth; i++){
             int size_i = simple_net->shape[i] * simple_net->shape[i+1];
-        for (int j = 0; j < size_i; j++) simple_net->weights[i]->values[j] = 1;
+        for (int j = 0; j < size_i; j++) simple_net->weights[i]->values[j] = ((float)(j * 47 % 11) / 12.0f);
     }
-
 
     // 6. ffn forward
     printf("Forwarding network..\n");
@@ -89,11 +88,12 @@ int main(){
     for (int i = 0; i < simple_net->depth; i++)
         print_tensor_value("Z value", simple_net->results[i]);
 
-
     // 5. Free Memory
     free_tensor(A);
     free_tensor(B);
     free_tensor(C);
+    free_tensor(X);
+    free_ffn(simple_net);
 
     return 0;
 }

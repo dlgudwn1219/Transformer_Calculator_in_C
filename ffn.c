@@ -98,7 +98,7 @@ void ffn_backward(FFN* ffn){
     }
     
     // 1. Y and Y^
-    
+        
 
     // 2. Backprop over W and Zs..
 
