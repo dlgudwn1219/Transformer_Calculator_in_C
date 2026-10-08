@@ -91,19 +91,41 @@ Tensor* ffn_forward(FFN* ffn, Tensor* A){
     return ffn->results[ffn->depth-1];
 }
 
-void ffn_backward(FFN* ffn){
+void ffn_backward(FFN* ffn, Tensor* Y){
     if (ffn->results == NULL){
         printf("ERROR: forward first to do backward\n");
         return;
     }
     
-    // 1. Y and Y^
-        
+    // 1. Softmaxloss
+    softmax_loss(ffn->results[ffn->depth - 1], Y);            
 
     // 2. Backprop over W and Zs..
-
-    for (int i = ffn->depth -1; i > 0; i--)
-        matmul_backward(ffn->results[i], ffn->results[i-1], ffn->weights[i-1]);
+    for (int i = ffn->depth-1; i > 0; i--){
+        matmul_backward(ffn->results[i-1], ffn->weights[i-1], ffn->results[i]);
+    }
 
     return;
+}
+
+int softmax_loss(Tensor* Y_hat, Tensor* Y){
+    // 1. Match batch_size
+    if (Y_hat->ndim != Y->ndim){
+        printf("Y_hat and Y has different dim\n");
+        return 1;
+    }
+    
+    // 2. We use softmax loss function here
+    // We assume Y_hat is (B, 1, 10) and Y is (B, 1, 10)
+    // ** We change the Y values.. we don't need them anymore
+    apply_softmax(Y_hat);
+
+    for (int b = 0; b < Y->shape[0]; b++){
+        for (int i = 0; i < Y->shape[2]; i++){
+            int temp = Y->shape[2];
+            Y_hat->grads[b*temp+i] = Y->values[b*temp+i] - Y->values[b*temp+i]; // p_i - y_i
+        }
+    }
+    
+    return 1;
 }

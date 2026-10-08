@@ -38,6 +38,7 @@ void relu_backward(float* x, float* dout, float* dx, int size);
 void sgd_update(Tensor* t, float lr);
 
 float softmax_crossentropy_forward(float* logits, int target_class, float* probs, int num_classes);
+void apply_softmax(Tensor* Y_hat);
 
 void softmax_crossentropy_backward(float* probs, int target_class, float* dlogits, int num_classes);
 

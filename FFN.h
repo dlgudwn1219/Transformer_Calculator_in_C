@@ -24,6 +24,7 @@ long get_size(FFN* ffn);
 
 // 4. Operation functions
 Tensor* ffn_forward(FFN* ffn, Tensor* X);
-void ffn_backward(FFN* ffn);
+void ffn_backward(FFN* ffn, Tensor* Y);
+int softmax_loss(Tensor* Y_hat, Tensor* Y);
 
 #endif // NEURALNET_H
